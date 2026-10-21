@@ -74,9 +74,14 @@ def load_artifacts() -> dict | None:
     """Everything saved by train(), or None if nothing (usable) is saved yet."""
     if not os.path.exists(MODEL_PATH):
         return None
-    obj = joblib.load(MODEL_PATH)
-    if "metrics" not in obj or "test_scored" not in obj:  # older save format
+    try:
+        obj = joblib.load(MODEL_PATH)
+    except Exception:
+        # Saved with a different Python / scikit-learn version (e.g. on a hosted
+        # server): ignore it, the app will retrain with the local versions.
         return None
+    if not isinstance(obj, dict) or "metrics" not in obj or "test_scored" not in obj:
+        return None  # older save format
     return obj
 
 
